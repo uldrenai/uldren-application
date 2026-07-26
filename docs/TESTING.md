@@ -2,7 +2,7 @@
 
 ## Test layout
 
-Specification 0001 places repository-level tests under `tests/`:
+Repository-level tests use the following layout:
 
 ```text
 tests/

@@ -8,8 +8,7 @@ Uldren Core domain engine. It is licensed under Apache-2.0.
 Uldren keeps domain behavior in a runtime-agnostic Rust core (`uldren-core`) and
 keeps this repository thin by injecting environment-specific implementations
 through typed contracts. Desktop is a tier-one product. CLI, TUI, daemon, and
-web remain compile-checked surfaces unless their release specifications promote
-them.
+web remain compile-checked surfaces and are excluded from release artifacts.
 
 ## Architecture
 
@@ -47,7 +46,8 @@ uldren-application/
   SECURITY.md
 ```
 
-Specification 0001 is authoritative for directory and dependency boundaries.
+Workspace manifests and package public entry points define the authoritative
+directory membership and dependency boundaries.
 
 ## Prerequisites
 
@@ -91,9 +91,3 @@ terms and required Individual Contributor License Agreement.
 
 Please report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 Do not open public issues for security reports.
-
-## Specifications
-
-The normative architecture and implementation plan live in the project's
-`uldren-specs` repository. The specifications are authoritative where this
-overview omits detail.
