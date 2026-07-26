@@ -26,7 +26,7 @@ manifest exists. `just ci` changes no files.
 
 ## Toolchain responsibilities
 
-The specifications assign these responsibilities to the workspace:
+The workspace assigns these responsibilities:
 
 - TypeScript: pnpm with Turborepo, strict `tsconfig`, type-aware ESLint,
   Prettier for formatting, and `knip` for unused code and dependencies.
@@ -43,5 +43,5 @@ Formatting commands in continuous integration always check; the mutating
 ## Configuration authority
 
 Where a tool's configuration file exists, that configuration is authoritative.
-This document summarizes intent and points to the specifications; it is not a
-substitute for the tool configuration that lands with each workspace.
+This document summarizes intent; it is not a substitute for the committed tool
+configuration.

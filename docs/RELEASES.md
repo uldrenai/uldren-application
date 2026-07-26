@@ -21,7 +21,8 @@ distinct artifact:
 - Linux: signed RPM, signed DEB, and signed archive.
 
 CLI, TUI, daemon, and web surfaces are compile-checked and excluded from release
-artifacts unless their release specifications promote them.
+artifacts. Releasing one of these surfaces requires updating this document and
+the release automation in the same change.
 
 ## Distribution channels
 
