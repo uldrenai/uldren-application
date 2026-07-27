@@ -11,6 +11,9 @@ target/
 
 packaging/**/artifacts/
 
+/.uldren/
+coordination/local-overrides.json
+
 *.log
 .env
 .env.*

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:uldren:schema:local-overrides:application:v1",
+  "title": "Uldren Application local dependency overrides",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "overrides"],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "core": {
+          "$ref": "#/$defs/override"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

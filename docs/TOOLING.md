@@ -28,6 +28,11 @@ and runs the corresponding gate when its manifest exists. `just ci` changes no f
 `coordination/schema/source-dependencies-v1.schema.json` with Ajv in JSON Schema 2020-12 mode. It is
 non-mutating, runs within `just ci`, and pins Ajv through `deno.json` and `deno.lock`.
 
+`just dependencies` resolves the pinned source dependencies into a managed checkout under
+`.uldren/dependencies`; it is mutating and is not part of `just ci`. `just dependencies-test`
+exercises the resolver in `coordination/tool/` against temporary Git repositories, is non-mutating,
+and runs within `just ci`.
+
 ## Toolchain responsibilities
 
 The workspace assigns these responsibilities:

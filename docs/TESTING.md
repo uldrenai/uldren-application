@@ -40,6 +40,8 @@ just test-integration  # integration suite
 
 `just schema-test` validates the coordination dependency documents against
 `coordination/schema/source-dependencies-v1.schema.json` and runs within `just ci`.
+`just dependencies-test` exercises the source resolver in `coordination/tool/` against temporary Git
+repositories and also runs within `just ci`.
 
 Continuous integration invokes the same `just` recipes rather than reproducing their logic in
 workflow files.
