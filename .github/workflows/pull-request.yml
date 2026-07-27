@@ -1,0 +1,47 @@
+name: pull-request
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: extractions/setup-just@v4
+        with:
+          just-version: 1.57.0
+      - run: just ci
+
+  conventional-commits:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Validate Conventional Commit subjects
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pattern='^(feat|fix|docs|chore|refactor|test|build|ci|perf|revert)(\([a-z0-9._-]+\))?!?: [a-z].+$'
+          status=0
+          while IFS= read -r subject; do
+            [ -z "$subject" ] && continue
+            if ! printf '%s' "$subject" | grep -Eq "$pattern"; then
+              echo "Invalid commit subject: $subject" >&2
+              status=1
+            fi
+          done < <(git log --no-merges --format=%s "$BASE_SHA..$HEAD_SHA")
+          if [ "$status" -ne 0 ]; then
+            echo "Commit subjects must follow Conventional Commits with a lower-case description." >&2
+            exit 1
+          fi
