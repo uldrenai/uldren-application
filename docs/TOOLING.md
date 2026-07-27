@@ -40,6 +40,19 @@ schema, writes atomically, and refuses to modify an invalid document.
 `just update-dependencies-test` runs the updater tests in isolation with an injected command
 boundary; `just ci` also exercises them through `just dependencies-test`.
 
+`just integrity-protected` and `just integrity-release <tag>` verify the committed Core pin against
+its closed schema, confirm the pinned commit is reachable from canonical protected Core `main` or an
+explicitly approved immutable semantic-version Core tag, and reject a present local override file,
+an override result, dirty Application or managed Core states, a mismatched managed HEAD, a wrong
+repository identity, and unresolved dependencies. They require a trusted, explicit mode, are
+network-dependent, and run in the protected-main and release workflows rather than in the fast
+`just ci`. The approved Core release reference is independent of the Application version; the
+release workflow verifies Core `main` reachability and never derives a Core reference from the
+Application release tag, and `just integrity-release <tag>` accepts an approved Core tag only
+through an explicit trusted invocation. The protected-main workflow runs the gate before merge on
+pull requests targeting `main` and again after merge on push to `main`. `just integrity-test` runs
+their tests in isolation; `just ci` also exercises them through `just dependencies-test`.
+
 ## Toolchain responsibilities
 
 The workspace assigns these responsibilities:

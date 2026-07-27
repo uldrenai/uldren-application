@@ -36,6 +36,15 @@ update-dependencies:
 update-dependencies-test:
     @deno test --frozen --allow-read --allow-write coordination/tool/update_test.ts
 
+integrity-protected:
+    @deno run --frozen --allow-read --allow-write --allow-run=git coordination/tool/integrity.ts --mode protected --root . --workspace .uldren/integrity
+
+integrity-release tag:
+    @deno run --frozen --allow-read --allow-write --allow-run=git coordination/tool/integrity.ts --mode release --root . --workspace .uldren/integrity --release-tag {{ quote(tag) }}
+
+integrity-test:
+    @deno test --frozen --allow-read --allow-write --allow-run --allow-env coordination/tool/integrity_test.ts
+
 ci: fmt-check schema-test dependencies-test
     @if [ -f package.json ]; then pnpm run lint; pnpm run typecheck; pnpm run build; pnpm run test; fi
     @if [ -f native/Cargo.toml ]; then cargo clippy --manifest-path native/Cargo.toml --workspace --locked --all-targets -- -D warnings; cargo test --manifest-path native/Cargo.toml --workspace --locked; fi
