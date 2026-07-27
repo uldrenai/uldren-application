@@ -1,7 +1,10 @@
 {
   "fmt": {
-    "include": ["**/*.md", "NOTICE"],
+    "include": ["**/*.md", "NOTICE", "coordination/**/*.ts", "coordination/**/*.json"],
     "lineWidth": 100,
     "proseWrap": "always"
+  },
+  "imports": {
+    "ajv/2020": "npm:ajv@8.20.0/dist/2020.js"
   }
 }

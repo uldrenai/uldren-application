@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:uldren:schema:source-dependencies:application:v1",
+  "title": "Uldren Application source dependencies",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "dependencies"],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["core"],
+      "properties": {
+        "core": {
+          "$ref": "#/$defs/dependencyEntry"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "dependencyEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "const": "https://github.com/uldrenai/uldren-core.git"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    }
+  }
+}

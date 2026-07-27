@@ -1,0 +1,107 @@
+{
+  "application-dependency-entry.json": {
+    "instancePath": "/dependencies",
+    "keyword": "additionalProperties",
+    "params": { "additionalProperty": "application" }
+  },
+  "branch-name.json": {
+    "instancePath": "/dependencies/core/commit",
+    "keyword": "pattern",
+    "params": { "pattern": "^[0-9a-f]{40}$" }
+  },
+  "missing-commit.json": {
+    "instancePath": "/dependencies/core",
+    "keyword": "required",
+    "params": { "missingProperty": "commit" }
+  },
+  "missing-dependencies.json": {
+    "instancePath": "",
+    "keyword": "required",
+    "params": { "missingProperty": "dependencies" }
+  },
+  "missing-dependency.json": {
+    "instancePath": "/dependencies",
+    "keyword": "required",
+    "params": { "missingProperty": "core" }
+  },
+  "missing-repository.json": {
+    "instancePath": "/dependencies/core",
+    "keyword": "required",
+    "params": { "missingProperty": "repository" }
+  },
+  "missing-schema-version.json": {
+    "instancePath": "",
+    "keyword": "required",
+    "params": { "missingProperty": "schemaVersion" }
+  },
+  "non-integer-schema-version.json": {
+    "instancePath": "/schemaVersion",
+    "keyword": "type",
+    "params": { "type": "integer" }
+  },
+  "non-object-dependencies.json": {
+    "instancePath": "/dependencies",
+    "keyword": "type",
+    "params": { "type": "object" }
+  },
+  "non-object-dependency-entry.json": {
+    "instancePath": "/dependencies/core",
+    "keyword": "type",
+    "params": { "type": "object" }
+  },
+  "non-string-commit.json": {
+    "instancePath": "/dependencies/core/commit",
+    "keyword": "type",
+    "params": { "type": "string" }
+  },
+  "non-string-repository.json": {
+    "instancePath": "/dependencies/core/repository",
+    "keyword": "type",
+    "params": { "type": "string" }
+  },
+  "short-sha.json": {
+    "instancePath": "/dependencies/core/commit",
+    "keyword": "pattern",
+    "params": { "pattern": "^[0-9a-f]{40}$" }
+  },
+  "tag-name.json": {
+    "instancePath": "/dependencies/core/commit",
+    "keyword": "pattern",
+    "params": { "pattern": "^[0-9a-f]{40}$" }
+  },
+  "unknown-dependency.json": {
+    "instancePath": "/dependencies",
+    "keyword": "additionalProperties",
+    "params": { "additionalProperty": "extra" }
+  },
+  "unknown-entry-property.json": {
+    "instancePath": "/dependencies/core",
+    "keyword": "additionalProperties",
+    "params": { "additionalProperty": "branch" }
+  },
+  "unknown-root-property.json": {
+    "instancePath": "",
+    "keyword": "additionalProperties",
+    "params": { "additionalProperty": "extra" }
+  },
+  "unsupported-schema-version.json": {
+    "instancePath": "/schemaVersion",
+    "keyword": "const",
+    "params": { "allowedValue": 1 }
+  },
+  "uppercase-sha.json": {
+    "instancePath": "/dependencies/core/commit",
+    "keyword": "pattern",
+    "params": { "pattern": "^[0-9a-f]{40}$" }
+  },
+  "wrong-dependency-name.json": {
+    "instancePath": "/dependencies",
+    "keyword": "additionalProperties",
+    "params": { "additionalProperty": "kore" }
+  },
+  "wrong-repository.json": {
+    "instancePath": "/dependencies/core/repository",
+    "keyword": "const",
+    "params": { "allowedValue": "https://github.com/uldrenai/uldren-core.git" }
+  }
+}

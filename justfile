@@ -19,7 +19,10 @@ test-integration:
     @if [ -f package.json ]; then pnpm run test:integration; fi
     @if [ -f native/Cargo.toml ]; then cargo test --manifest-path native/Cargo.toml --workspace --locked --tests; fi
 
-ci: fmt-check
+schema-test:
+    @deno test --frozen --allow-read coordination/test/
+
+ci: fmt-check schema-test
     @if [ -f package.json ]; then pnpm run lint; pnpm run typecheck; pnpm run build; pnpm run test; fi
     @if [ -f native/Cargo.toml ]; then cargo clippy --manifest-path native/Cargo.toml --workspace --locked --all-targets -- -D warnings; cargo test --manifest-path native/Cargo.toml --workspace --locked; fi
 
