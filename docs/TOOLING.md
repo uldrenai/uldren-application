@@ -33,6 +33,13 @@ non-mutating, runs within `just ci`, and pins Ajv through `deno.json` and `deno.
 exercises the resolver in `coordination/tool/` against temporary Git repositories, is non-mutating,
 and runs within `just ci`.
 
+`just update-dependencies` resolves the current head of the canonical Core `main` branch and writes
+the immutable commit into `coordination/source-dependencies.json`; it is mutating and is not part of
+`just ci`. It follows `main` only at explicit update time, validates the document against its
+schema, writes atomically, and refuses to modify an invalid document.
+`just update-dependencies-test` runs the updater tests in isolation with an injected command
+boundary; `just ci` also exercises them through `just dependencies-test`.
+
 ## Toolchain responsibilities
 
 The workspace assigns these responsibilities:

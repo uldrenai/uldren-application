@@ -28,6 +28,12 @@ dependencies-test:
 dependencies mode root workspace application="" override_file="":
     @deno run --frozen --allow-read --allow-write --allow-run=git --allow-env=TMPDIR coordination/tool/cli.ts --mode {{ quote(mode) }} --root {{ quote(root) }} --workspace {{ quote(workspace) }} --application {{ quote(application) }} --override-file {{ quote(override_file) }}
 
+update-dependencies:
+    @deno run --frozen --allow-read --allow-write --allow-run=git coordination/tool/update.ts
+
+update-dependencies-test:
+    @deno test --frozen --allow-read --allow-write coordination/tool/update_test.ts
+
 ci: fmt-check schema-test dependencies-test
     @if [ -f package.json ]; then pnpm run lint; pnpm run typecheck; pnpm run build; pnpm run test; fi
     @if [ -f native/Cargo.toml ]; then cargo clippy --manifest-path native/Cargo.toml --workspace --locked --all-targets -- -D warnings; cargo test --manifest-path native/Cargo.toml --workspace --locked; fi
