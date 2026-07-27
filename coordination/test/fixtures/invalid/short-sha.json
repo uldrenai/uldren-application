@@ -1,9 +1,6 @@
 {
   "schemaVersion": 1,
   "dependencies": {
-    "core": {
-      "repository": "https://github.com/uldrenai/uldren-core.git",
-      "commit": "0123abc"
-    }
+    "core": { "repository": "https://github.com/uldrenai/uldren-core.git", "commit": "0123abc" }
   }
 }

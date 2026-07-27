@@ -6,12 +6,14 @@ default:
 fmt:
     @deno fmt
     @deno fmt --ext md NOTICE
+    @deno run --frozen --allow-read --allow-write scripts/format-json.ts write
     @if [ -f package.json ]; then pnpm run fmt; fi
     @if [ -f native/Cargo.toml ]; then cargo fmt --manifest-path native/Cargo.toml --all; fi
 
 fmt-check:
     @deno fmt --check
     @deno fmt --check --ext md NOTICE
+    @deno run --frozen --allow-read scripts/format-json.ts check
     @if [ -f package.json ]; then pnpm run fmt:check; fi
     @if [ -f native/Cargo.toml ]; then cargo fmt --manifest-path native/Cargo.toml --all -- --check; fi
 

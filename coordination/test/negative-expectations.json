@@ -103,5 +103,10 @@
     "instancePath": "/dependencies/core/repository",
     "keyword": "const",
     "params": { "allowedValue": "https://github.com/uldrenai/uldren-core.git" }
+  },
+  "malformed-sha.json": {
+    "instancePath": "/dependencies/core/commit",
+    "keyword": "pattern",
+    "params": { "pattern": "^[0-9a-f]{40}$" }
   }
 }
