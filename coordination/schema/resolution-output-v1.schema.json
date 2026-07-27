@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:uldren:schema:resolution-output:application:v1",
+  "title": "Uldren Application dependency resolution output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "resolved"],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "resolved": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            { "$ref": "#/$defs/applicationRoot" },
+            { "$ref": "#/$defs/core" }
+          ],
+          "items": false
+        },
+        {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            { "$ref": "#/$defs/mobileRoot" },
+            { "$ref": "#/$defs/applicationPreResolved" },
+            { "$ref": "#/$defs/core" }
+          ],
+          "items": false
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "absolutePath": {
+      "type": "string",
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\[^\\\\/]+[\\\\/][^\\\\/]+)"
+    },
+    "applicationRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit", "path", "sourceKind", "dirty"],
+      "properties": {
+        "name": { "const": "application" },
+        "repository": { "const": "https://github.com/uldrenai/uldren-application.git" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "path": { "$ref": "#/$defs/absolutePath" },
+        "sourceKind": { "const": "root" },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "mobileRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit", "path", "sourceKind", "dirty"],
+      "properties": {
+        "name": { "const": "mobile" },
+        "repository": { "const": "https://github.com/uldrenai/uldren-mobile.git" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "path": { "$ref": "#/$defs/absolutePath" },
+        "sourceKind": { "const": "root" },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "applicationPreResolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit", "path", "sourceKind", "dirty"],
+      "properties": {
+        "name": { "const": "application" },
+        "repository": { "const": "https://github.com/uldrenai/uldren-application.git" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "path": { "$ref": "#/$defs/absolutePath" },
+        "sourceKind": { "const": "pre-resolved" },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "core": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit", "path", "sourceKind", "dirty"],
+      "properties": {
+        "name": { "const": "core" },
+        "repository": { "const": "https://github.com/uldrenai/uldren-core.git" },
+        "commit": { "$ref": "#/$defs/commit" },
+        "path": { "$ref": "#/$defs/absolutePath" },
+        "sourceKind": { "enum": ["managed", "override"] },
+        "dirty": { "type": "boolean" }
+      }
+    }
+  }
+}
