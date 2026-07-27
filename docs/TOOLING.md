@@ -22,6 +22,12 @@ allowed to include more expensive local diagnostics than the per-pull-request ga
 Each recipe checks for a `package.json` (pnpm/Turborepo) and a `native/Cargo.toml` (Cargo) workspace
 and runs the corresponding gate when its manifest exists. `just ci` changes no files.
 
+## Coordination schema
+
+`just schema-test` validates the coordination dependency documents against
+`coordination/schema/source-dependencies-v1.schema.json` with Ajv in JSON Schema 2020-12 mode. It is
+non-mutating, runs within `just ci`, and pins Ajv through `deno.json` and `deno.lock`.
+
 ## Toolchain responsibilities
 
 The workspace assigns these responsibilities:
