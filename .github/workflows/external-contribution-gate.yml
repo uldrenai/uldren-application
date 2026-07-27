@@ -1,0 +1,58 @@
+name: external-contribution-gate
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - ready_for_review
+      - reopened
+      - synchronize
+
+permissions: {}
+
+jobs:
+  external-contribution-gate:
+    name: external-contribution-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Check contributor access
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const actor = context.payload.pull_request.user.login;
+            const allowedActors = new Set(["dependabot[bot]", "uldren-agent"]);
+            const allowedPermissions = new Set(["admin", "maintain", "write"]);
+
+            if (allowedActors.has(actor)) {
+              return;
+            }
+
+            const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: actor,
+            });
+
+            if (allowedPermissions.has(data.permission)) {
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: "COMMENT",
+              body: "External contributions are unavailable until the approved Contributor License Agreement process is enabled.",
+            });
+
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: "closed",
+            });
+
+            core.setFailed(`External contributions are not enabled for ${actor}.`);
