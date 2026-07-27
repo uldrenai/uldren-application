@@ -33,3 +33,10 @@ Every release is expected to publish checksums, dependency repository SHAs, buil
 software bill of materials, license and notice material, update metadata, and architecture and
 platform labels. Signing and notarization material comes from protected environments and is never
 committed to the repository.
+
+A release build must pass the dependency-integrity gate before publishing. The gate fails unless the
+committed Core pin is an exact commit reachable from canonical protected Core `main` or an
+explicitly approved immutable Core tag. The approved Core reference is independent of the
+Application version: the release workflow verifies Core `main` reachability and never treats the
+Application release tag as a Core reference. The same enforcement runs on protected `main` both
+before merge, on pull requests targeting `main`, and after merge, on push to `main`.
