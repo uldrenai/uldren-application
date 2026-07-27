@@ -1,8 +1,4 @@
 {
   "schemaVersion": 1,
-  "dependencies": {
-    "core": {
-      "commit": "0123456789abcdef0123456789abcdef01234567"
-    }
-  }
+  "dependencies": { "core": { "commit": "0123456789abcdef0123456789abcdef01234567" } }
 }

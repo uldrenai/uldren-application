@@ -6,18 +6,11 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "overrides"],
   "properties": {
-    "schemaVersion": {
-      "type": "integer",
-      "const": 1
-    },
+    "schemaVersion": { "type": "integer", "const": 1 },
     "overrides": {
       "type": "object",
       "additionalProperties": false,
-      "properties": {
-        "core": {
-          "$ref": "#/$defs/override"
-        }
-      }
+      "properties": { "core": { "$ref": "#/$defs/override" } }
     }
   },
   "$defs": {
@@ -25,12 +18,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["path"],
-      "properties": {
-        "path": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
+      "properties": { "path": { "type": "string", "minLength": 1 } }
     }
   }
 }

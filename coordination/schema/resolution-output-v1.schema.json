@@ -6,20 +6,14 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "resolved"],
   "properties": {
-    "schemaVersion": {
-      "type": "integer",
-      "const": 1
-    },
+    "schemaVersion": { "type": "integer", "const": 1 },
     "resolved": {
       "oneOf": [
         {
           "type": "array",
           "minItems": 2,
           "maxItems": 2,
-          "prefixItems": [
-            { "$ref": "#/$defs/applicationRoot" },
-            { "$ref": "#/$defs/core" }
-          ],
+          "prefixItems": [{ "$ref": "#/$defs/applicationRoot" }, { "$ref": "#/$defs/core" }],
           "items": false
         },
         {
@@ -37,10 +31,7 @@
     }
   },
   "$defs": {
-    "commit": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$"
-    },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "absolutePath": {
       "type": "string",
       "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\[^\\\\/]+[\\\\/][^\\\\/]+)"

@@ -1,0 +1,16 @@
+{
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "jsdocPreferCodeFences": true,
+  "jsdocPrintWidth": 100,
+  "objectWrap": "collapse",
+  "plugins": ["prettier-plugin-jsdoc"],
+  "printWidth": 100,
+  "proseWrap": "always",
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "tsdoc": true,
+  "useTabs": false
+}

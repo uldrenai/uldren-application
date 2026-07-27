@@ -1,10 +1,11 @@
 {
   "fmt": {
-    "include": ["**/*.md", "NOTICE", "coordination/**/*.ts", "coordination/**/*.json"],
+    "include": ["**/*.md", "NOTICE", "coordination/**/*.ts", "scripts/**/*.ts"],
     "lineWidth": 100,
     "proseWrap": "always"
   },
   "imports": {
-    "ajv/2020": "npm:ajv@8.20.0/dist/2020.js"
+    "ajv/2020": "npm:ajv@8.20.0/dist/2020.js",
+    "prettier-plugin-jsdoc": "npm:prettier-plugin-jsdoc@1.8.1"
   }
 }
