@@ -10,10 +10,15 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: external-contribution-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   external-contribution-gate:
     name: external-contribution-gate
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
