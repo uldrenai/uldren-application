@@ -24,6 +24,10 @@ contribution cannot be merged. The CLA records the contributor's attestation tha
 
 If ownership is ambiguous, the contribution is not merged.
 
+CLA enrollment requires an approved Individual CLA, a durable public document location, a maintained
+signing implementation, signature storage, and a required CLA status check. No CLA workflow runs and
+no signatures are collected until those controls are configured.
+
 ## Organizational contributions
 
 Organizationally owned contributions require an executed Corporate Contributor License Agreement
