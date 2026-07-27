@@ -13,9 +13,8 @@ tests/
   security/
 ```
 
-Package- and app-level unit tests live beside their sources under
-`apps/*/test` and `packages/*/test`. Native Rust tests live within the
-`native/` Cargo workspace.
+Package- and app-level unit tests live beside their sources under `apps/*/test` and
+`packages/*/test`. Native Rust tests live within the `native/` Cargo workspace.
 
 ## Running tests
 
@@ -27,22 +26,19 @@ just ci                # formatting check, static analysis, unit, and build gate
 just test-integration  # integration suite
 ```
 
-Continuous integration invokes the same `just` recipes rather than
-reproducing their logic in workflow files.
+Continuous integration invokes the same `just` recipes rather than reproducing their logic in
+workflow files.
 
 ## Placement and isolation
 
-- Keep unit tests next to the code they cover; keep cross-cutting suites under
-  `tests/`.
-- Tests must not depend on developer-specific state or network access unless
-  explicitly marked as integration or end-to-end.
-- Integration and end-to-end suites carry their fixtures under
-  `tests/fixtures/`.
+- Keep unit tests next to the code they cover; keep cross-cutting suites under `tests/`.
+- Tests must not depend on developer-specific state or network access unless explicitly marked as
+  integration or end-to-end.
+- Integration and end-to-end suites carry their fixtures under `tests/fixtures/`.
 
 ## Review focus
 
-Review each change skeptically across correctness, type safety, security,
-contract compliance, edge cases, performance, API design, and test coverage.
-Trace behavior through Electron IPC and native boundaries to the authoritative
-contract. Test observable effects rather than relying only on mocks that copy
-the expected implementation.
+Review each change skeptically across correctness, type safety, security, contract compliance, edge
+cases, performance, API design, and test coverage. Trace behavior through Electron IPC and native
+boundaries to the authoritative contract. Test observable effects rather than relying only on mocks
+that copy the expected implementation.

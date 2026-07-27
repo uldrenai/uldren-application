@@ -2,9 +2,9 @@
 
 ## Our commitment
 
-We are committed to providing a welcoming, respectful, and harassment-free
-experience for everyone who takes part in the Uldren Application project,
-regardless of background, identity, or level of experience.
+We are committed to providing a welcoming, respectful, and harassment-free experience for everyone
+who takes part in the Uldren Application project, regardless of background, identity, or level of
+experience.
 
 ## Expected behavior
 
@@ -23,25 +23,23 @@ regardless of background, identity, or level of experience.
 
 ## Scope
 
-This Code of Conduct applies within all project spaces, including the
-repository, issues, pull requests, and code review, and whenever an individual
-is representing the project in public spaces.
+This Code of Conduct applies within all project spaces, including the repository, issues, pull
+requests, and code review, and whenever an individual is representing the project in public spaces.
 
 ## Reporting
 
-Report Code of Conduct concerns privately to coc@uldren.ai. Do not use this
-address for security vulnerabilities; those follow the separate process in
-`SECURITY.md`. Reports are handled confidentially. Include what happened, where
-and when it occurred, and any context that would help address it.
+Report Code of Conduct concerns privately to coc@uldren.ai. Do not use this address for security
+vulnerabilities; those follow the separate process in `SECURITY.md`. Reports are handled
+confidentially. Include what happened, where and when it occurred, and any context that would help
+address it.
 
 ## Enforcement
 
-Project maintainers are responsible for clarifying and enforcing these
-standards. They may remove, edit, or reject comments, commits, code, issues, and
-other contributions that violate this Code of Conduct, and may temporarily or
-permanently restrict participation for behavior they deem inappropriate,
-threatening, or harmful. Enforcement decisions aim to be fair, proportionate,
-and consistently applied.
+Project maintainers are responsible for clarifying and enforcing these standards. They may remove,
+edit, or reject comments, commits, code, issues, and other contributions that violate this Code of
+Conduct, and may temporarily or permanently restrict participation for behavior they deem
+inappropriate, threatening, or harmful. Enforcement decisions aim to be fair, proportionate, and
+consistently applied.
 
 ## Attribution
 
