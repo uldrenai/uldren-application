@@ -18,6 +18,7 @@ fmt-check:
     @if [ -f native/Cargo.toml ]; then cargo fmt --manifest-path native/Cargo.toml --all -- --check; fi
 
 test-integration:
+    @just integrity-acceptance
     @if [ -f package.json ]; then pnpm run test:integration; fi
     @if [ -f native/Cargo.toml ]; then cargo test --manifest-path native/Cargo.toml --workspace --locked --tests; fi
 
@@ -37,13 +38,16 @@ update-dependencies-test:
     @deno test --frozen --allow-read --allow-write coordination/tool/update_test.ts
 
 integrity-protected:
-    @deno run --frozen --allow-read --allow-write --allow-run=git coordination/tool/integrity.ts --mode protected --root . --workspace .uldren/integrity
+    @deno run --frozen --allow-read --allow-run=git coordination/tool/integrity.ts --mode protected --root . --workspace .uldren/integrity
 
 integrity-release tag:
-    @deno run --frozen --allow-read --allow-write --allow-run=git coordination/tool/integrity.ts --mode release --root . --workspace .uldren/integrity --release-tag {{ quote(tag) }}
+    @deno run --frozen --allow-read --allow-run=git coordination/tool/integrity.ts --mode release --root . --workspace .uldren/integrity --release-tag {{ quote(tag) }}
 
 integrity-test:
     @deno test --frozen --allow-read --allow-write --allow-run --allow-env coordination/tool/integrity_test.ts
+
+integrity-acceptance:
+    @deno test --cached-only --frozen --allow-read --allow-write --allow-run=git,deno --allow-env tests/integration/dependency-integrity_test.ts
 
 ci: fmt-check schema-test dependencies-test
     @if [ -f package.json ]; then pnpm run lint; pnpm run typecheck; pnpm run build; pnpm run test; fi

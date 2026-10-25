@@ -20,6 +20,7 @@ jobs:
         with:
           deno-version: 2.8.1
       - run: just ci
+      - run: just integrity-acceptance
 
   conventional-commits:
     if: github.event_name == 'pull_request'

@@ -40,3 +40,7 @@ explicitly approved immutable Core tag. The approved Core reference is independe
 Application version: the release workflow verifies Core `main` reachability and never treats the
 Application release tag as a Core reference. The same enforcement runs on protected `main` both
 before merge, on pull requests targeting `main`, and after merge, on push to `main`.
+
+The workflows prepare exact dependencies before invoking the verification-only gate. Verification
+does not create missing checkouts, repair mismatched HEADs, or use development overrides. Core
+reachability checks fetch Git reference metadata without modifying source or coordination pins.

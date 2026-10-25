@@ -10,6 +10,7 @@ import {
   defaultSchemaDirectory,
   type ResolvedNode,
   ResolverError,
+  SourceResolver,
 } from "./resolver.ts";
 import { join } from "node:path";
 
@@ -131,6 +132,14 @@ function seedApplication(sandbox: Sandbox, coreCommit: string): Promise<string> 
   return seedApplicationWithRemote(sandbox, coreCommit, APPLICATION_REPOSITORY);
 }
 
+async function prepare(sandbox: Sandbox, application: string): Promise<void> {
+  await new SourceResolver(runnerFor(sandbox.env), SCHEMA_DIR).resolve({
+    mode: "application-direct",
+    root: application,
+    workspace: join(application, ".uldren/integrity"),
+  });
+}
+
 function coreNode(overrides: Partial<ResolvedNode>): ResolvedNode {
   return {
     name: "core",
@@ -182,6 +191,7 @@ Deno.test("accepts a commit reachable from protected main", async () => {
     const commit = await git(sandbox.env, core, "rev-parse", "HEAD");
     await redirectCore(sandbox, core);
     const application = await seedApplication(sandbox, commit);
+    await prepare(sandbox, application);
     const result = await runIntegrity({
       mode: { kind: "protected" },
       root: application,
@@ -204,6 +214,7 @@ Deno.test("accepts a commit reachable from an approved release tag", async () =>
     await git(sandbox.env, core, "commit", "--quiet", "-am", "advance main");
     await redirectCore(sandbox, core);
     const application = await seedApplication(sandbox, commit);
+    await prepare(sandbox, application);
     const result = await runIntegrity({
       mode: { kind: "release", tag: "v1.2.3" },
       root: application,
@@ -227,6 +238,7 @@ Deno.test("rejects a commit that is not reachable from main", async () => {
     await git(sandbox.env, core, "checkout", "--quiet", "main");
     await redirectCore(sandbox, core);
     const application = await seedApplication(sandbox, orphan);
+    await prepare(sandbox, application);
     const result = await runIntegrity({
       mode: { kind: "protected" },
       root: application,
@@ -239,7 +251,7 @@ Deno.test("rejects a commit that is not reachable from main", async () => {
   });
 });
 
-Deno.test("rejects a commit that does not exist in the canonical repository", async () => {
+Deno.test("rejects an unresolved dependency without attempting to obtain it", async () => {
   await withSandbox(async (sandbox) => {
     const core = await seedCore(sandbox);
     await redirectCore(sandbox, core);
@@ -255,7 +267,8 @@ Deno.test("rejects a commit that does not exist in the canonical repository", as
       schemaDirectory: SCHEMA_DIR,
     });
     assertEquals(result.code, 1, "rejected");
-    assert(result.stderr.includes("commit-unavailable"), `reason; stderr=${result.stderr}`);
+    assert(result.stderr.includes("unresolved-dependency"), `reason; stderr=${result.stderr}`);
+    assert(!await exists(join(application, ".uldren")), "verification creates no workspace");
   });
 });
 
@@ -405,6 +418,7 @@ Deno.test("rejects a dirty managed core checkout on reuse", async () => {
     const commit = await git(sandbox.env, core, "rev-parse", "HEAD");
     await redirectCore(sandbox, core);
     const application = await seedApplication(sandbox, commit);
+    await prepare(sandbox, application);
     const workspace = join(application, ".uldren/integrity");
     const options = {
       mode: { kind: "protected" as const },
@@ -431,6 +445,7 @@ Deno.test("rejects a managed core whose HEAD no longer matches the pin", async (
     const second = await git(sandbox.env, core, "rev-parse", "HEAD");
     await redirectCore(sandbox, core);
     const application = await seedApplication(sandbox, second);
+    await prepare(sandbox, application);
     const workspace = join(application, ".uldren/integrity");
     const options = {
       mode: { kind: "protected" as const },
@@ -483,6 +498,7 @@ Deno.test("rejects a release when the approved core tag is unavailable", async (
     const commit = await git(sandbox.env, core, "rev-parse", "HEAD");
     await redirectCore(sandbox, core);
     const application = await seedApplication(sandbox, commit);
+    await prepare(sandbox, application);
     const result = await runIntegrity({
       mode: { kind: "release", tag: "v9.9.9" },
       root: application,
@@ -493,6 +509,78 @@ Deno.test("rejects a release when the approved core tag is unavailable", async (
     assertEquals(result.code, 1, "rejected");
     assert(result.stderr.includes("reference-unavailable"), `reason; stderr=${result.stderr}`);
   });
+});
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await Deno.lstat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return false;
+    throw error;
+  }
+}
+
+Deno.test("integrity rejects duplicate, reordered, and extra graph nodes", () => {
+  for (
+    const resolved of [
+      [rootNode(), coreNode({}), coreNode({})],
+      [coreNode({}), rootNode()],
+      [rootNode(), rootNode(), coreNode({})],
+    ]
+  ) {
+    let reason: string | undefined;
+    try {
+      selectResolvedNodes({ schemaVersion: 1, resolved });
+    } catch (error) {
+      reason = (error as ResolverError).reason;
+    }
+    assertEquals(reason, "unresolved-dependency", "only the exact ordered graph is accepted");
+  }
+});
+
+Deno.test("integrity CLI validates the transitive invocation and redacts invalid arguments", () => {
+  const base = [
+    "--mode",
+    "protected",
+    "--root",
+    "/mobile",
+    "--workspace",
+    "/mobile/.uldren/dependencies",
+  ];
+  const options = parseIntegrityArguments([
+    ...base,
+    "--resolution-mode",
+    "mobile-transitive",
+    "--application",
+    "/mobile/.uldren/dependencies/application",
+  ]);
+  assertEquals(options.resolutionMode, "mobile-transitive", "transitive mode selected");
+  assertEquals(
+    options.applicationPath,
+    "/mobile/.uldren/dependencies/application",
+    "application supplied",
+  );
+  for (
+    const suffix of [
+      ["--mode", "release"],
+      ["--resolution-mode", "unknown"],
+      ["--resolution-mode", "mobile-transitive"],
+      ["--application", "/application"],
+      ["--secret=credential-value"],
+      ["--release-tag", "--secret=credential-value"],
+      ["--toString", "credential-value"],
+    ]
+  ) {
+    let rejected = false;
+    try {
+      parseIntegrityArguments([...base, ...suffix]);
+    } catch (error) {
+      rejected = error instanceof ResolverError && error.reason === "invalid-invocation";
+      assert(!String(error).includes("credential-value"), "diagnostic does not echo values");
+    }
+    assert(rejected, "invalid invocation rejected");
+  }
 });
 
 Deno.test("the integrity boundary treats a missing core dependency as unresolved", () => {
