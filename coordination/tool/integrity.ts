@@ -3,6 +3,8 @@ import {
   type CommandRunner,
   defaultSchemaDirectory,
   DenoCommandRunner,
+  type Mode,
+  renderResolution,
   type ResolutionOutput,
   type ResolvedNode,
   ResolverError,
@@ -20,6 +22,8 @@ export interface IntegrityOptions {
   readonly mode: IntegrityMode;
   readonly root: string;
   readonly workspace: string;
+  readonly resolutionMode?: Mode;
+  readonly applicationPath?: string;
   readonly runner?: CommandRunner;
   readonly schemaDirectory?: string;
   readonly exists?: (path: string) => boolean;
@@ -33,7 +37,7 @@ export interface IntegrityResult {
 
 function pathExists(path: string): boolean {
   try {
-    Deno.statSync(path);
+    Deno.lstatSync(path);
     return true;
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
@@ -54,14 +58,19 @@ function accepted(mode: string, commit: string, reachableFrom: string): string {
 export function selectResolvedNodes(
   resolution: ResolutionOutput,
 ): { application: ResolvedNode; core: ResolvedNode } {
-  const application = resolution.resolved.find((node) => node.sourceKind === "root");
-  const core = resolution.resolved.find((node) => node.name === "core");
-  if (application === undefined || core === undefined) {
+  const names = resolution.resolved.map((node) => node.name);
+  const expected = names.length === 2 ? ["application", "core"] : ["mobile", "application", "core"];
+  if (
+    resolution.schemaVersion !== 1 ||
+    names.length !== expected.length || names.some((name, index) => name !== expected[index])
+  ) {
     throw new ResolverError(
       "unresolved-dependency",
-      "resolution did not produce the core dependency",
+      "resolution did not produce the ordered dependency graph",
     );
   }
+  const application = resolution.resolved[resolution.resolved.length - 2];
+  const core = resolution.resolved[resolution.resolved.length - 1];
   return { application, core };
 }
 
@@ -130,10 +139,11 @@ export async function runIntegrity(options: IntegrityOptions): Promise<Integrity
     }
 
     const resolver = new SourceResolver(runner, schemaDirectory);
-    const resolution = await resolver.resolve({
-      mode: "application-direct",
+    const resolution = await resolver.verify({
+      mode: options.resolutionMode ?? "application-direct",
       root: options.root,
       workspace: options.workspace,
+      applicationPath: options.applicationPath,
     });
 
     const { application, core } = selectResolvedNodes(resolution);
@@ -147,7 +157,13 @@ export async function runIntegrity(options: IntegrityOptions): Promise<Integrity
     const label = options.mode.kind === "protected"
       ? "protected-main"
       : `release-tag ${options.mode.tag}`;
-    return { code: 0, stdout: accepted(label, core.commit, reference), stderr: "" };
+    return {
+      code: 0,
+      stdout: options.resolutionMode === "mobile-transitive"
+        ? renderResolution(resolution)
+        : accepted(label, core.commit, reference),
+      stderr: "",
+    };
   } catch (error) {
     if (error instanceof ResolverError) {
       return { code: 1, stdout: "", stderr: diagnostic(error.reason, error.message) };
@@ -161,6 +177,8 @@ const FLAGS = {
   "--root": "root",
   "--workspace": "workspace",
   "--release-tag": "releaseTag",
+  "--resolution-mode": "resolutionMode",
+  "--application": "applicationPath",
 } as const;
 
 type FlagName = keyof typeof FLAGS;
@@ -175,13 +193,16 @@ export function parseIntegrityArguments(args: readonly string[]): IntegrityOptio
     const token = args[index];
     const equals = token.indexOf("=");
     const flag = (equals === -1 ? token : token.slice(0, equals)) as FlagName;
-    if (!(flag in FLAGS)) {
-      invalid(`unknown argument: ${token}`);
+    if (!Object.hasOwn(FLAGS, flag)) {
+      invalid("unknown argument");
+    }
+    if (Object.hasOwn(values, FLAGS[flag])) {
+      invalid("duplicate argument");
     }
     let value: string;
     if (equals === -1) {
       const next = args[index + 1];
-      if (next === undefined) {
+      if (next === undefined || next.startsWith("--")) {
         invalid(`missing value for ${flag}`);
       }
       value = next;
@@ -199,12 +220,29 @@ export function parseIntegrityArguments(args: readonly string[]): IntegrityOptio
     invalid("missing required argument for --workspace");
   }
 
+  const resolutionMode = values.resolutionMode ?? "application-direct";
+  if (resolutionMode !== "application-direct" && resolutionMode !== "mobile-transitive") {
+    invalid("resolution mode must be application-direct or mobile-transitive");
+  }
+  if (resolutionMode === "mobile-transitive" && (values.applicationPath ?? "").length === 0) {
+    invalid("mobile-transitive mode requires --application");
+  }
+  if (resolutionMode === "application-direct" && values.applicationPath !== undefined) {
+    invalid("application-direct mode does not accept --application");
+  }
+  const consumer = { resolutionMode, applicationPath: values.applicationPath } as const;
+
   const modeValue = values.mode ?? "";
   if (modeValue === "protected") {
     if (values.releaseTag !== undefined) {
       invalid("protected mode does not accept --release-tag");
     }
-    return { mode: { kind: "protected" }, root: values.root, workspace: values.workspace };
+    return {
+      mode: { kind: "protected" },
+      root: values.root,
+      workspace: values.workspace,
+      ...consumer,
+    };
   }
   if (modeValue === "release") {
     if ((values.releaseTag ?? "").length === 0) {
@@ -214,6 +252,7 @@ export function parseIntegrityArguments(args: readonly string[]): IntegrityOptio
       mode: { kind: "release", tag: values.releaseTag },
       root: values.root,
       workspace: values.workspace,
+      ...consumer,
     };
   }
   invalid("--mode must be protected or release");

@@ -53,6 +53,47 @@ through an explicit trusted invocation. The protected-main workflow runs the gat
 pull requests targeting `main` and again after merge on push to `main`. `just integrity-test` runs
 their tests in isolation; `just ci` also exercises them through `just dependencies-test`.
 
+Prepare the managed checkout separately before verifying it:
+
+```sh
+just dependencies application-direct . .uldren/integrity
+just integrity-protected
+```
+
+Verification rejects missing checkouts instead of creating or repairing them. It does not change
+source files, pins, checkout HEADs, or dependency workspace contents. Reachability verification
+fetches the required reference into the existing Core repository, updating Git objects and fetch
+metadata. Dependency preparation is the operation that creates checkouts and workspace locks.
+
+### Transitive integrity contract
+
+Mobile invokes `coordination/tool/integrity.ts` from its exact pinned Application checkout:
+
+```sh
+deno run --frozen --allow-read --allow-run=git \
+  /workspace/mobile/.uldren/dependencies/application/coordination/tool/integrity.ts \
+  --mode protected --resolution-mode mobile-transitive \
+  --root /workspace/mobile --workspace /workspace/mobile/.uldren/dependencies \
+  --application /workspace/mobile/.uldren/dependencies/application
+```
+
+Run from the pinned Application directory so Deno uses that checkout's configuration and lockfile.
+Application and Core remain siblings in the managed workspace. Application checks the Core pin,
+checkout identity, exact HEAD, cleanliness, and protected-history reachability. It rejects dirty
+Mobile/Application trees, either consumer's local override file (including dangling symlinks), an
+active workspace lock, paths outside Mobile, and an Application path outside its managed slot.
+
+Success returns the existing `resolution-output-v1.schema.json` graph in deterministic
+Mobile/Application/Core order. Direct mode retains its integrity-summary output. Failure returns a
+nonzero exit status and `{ "error": { "policy": "...", "message": "..." } }` on stderr without
+echoing remote credentials. Unknown or duplicate CLI arguments are rejected.
+
+Mobile owns validation of its committed Application pin, comparison with the Application graph node,
+and Application protected-history approval. Application owns Core policy; it does not read or
+interpret Mobile's pin schema. A trusted `--mode release --release-tag v1.2.3` selects an approved
+**Core** tag, independently of Mobile's or Application's version. Local development continues to use
+the resolver CLI and its explicit override option, not the integrity entrypoint.
+
 ## Toolchain responsibilities
 
 The workspace assigns these responsibilities:

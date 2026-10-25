@@ -130,6 +130,38 @@ Deno.test("protected integrity runs before merge on pull requests and after merg
   assert(workflow.includes("just integrity-protected"), "invokes the protected integrity recipe");
 });
 
+Deno.test("workflows prepare exact dependencies before verification", () => {
+  for (const name of ["protected-integrity.yml", "release.yml"]) {
+    const workflow = read(name);
+    const preparation = workflow.indexOf(
+      "- run: just dependencies application-direct . .uldren/integrity",
+    );
+    const verification = workflow.indexOf("- run: just integrity-protected");
+    assert(preparation >= 0 && preparation < verification, "preparation precedes verification");
+    assert(!workflow.includes("--override-file"), "no workflow override selection");
+    assert(!workflow.includes("continue-on-error"), "integrity failures cannot be ignored");
+  }
+});
+
+Deno.test("pull-request CI runs transitive acceptance after the cached dependency gate", () => {
+  const workflow = read("pull-request.yml");
+  const gate = workflow.indexOf("- run: just ci");
+  const acceptance = workflow.indexOf("- run: just integrity-acceptance");
+  assert(gate >= 0 && acceptance > gate, "real CLI acceptance is a required CI step");
+  assert(!workflow.includes("continue-on-error"), "acceptance failures cannot be ignored");
+});
+
+Deno.test("integrity recipes do not grant Deno filesystem write permission", () => {
+  const justfile = Deno.readTextFileSync(resolve(WORKFLOWS, "../..", "justfile"));
+  const invocations = justfile.split("\n").filter((line) =>
+    line.includes("coordination/tool/integrity.ts")
+  );
+  assert(invocations.length === 2, "both protected and approved-tag entrypoints exist");
+  for (const invocation of invocations) {
+    assert(!invocation.includes("--allow-write"), "verification has no Deno write permission");
+  }
+});
+
 Deno.test("the release workflow enforces integrity without coupling to the application version", () => {
   const workflow = read("release.yml");
   assert(workflow.includes('- "v[0-9]+.[0-9]+.[0-9]+"'), "triggers only on semver tags");

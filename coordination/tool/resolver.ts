@@ -102,6 +102,8 @@ export interface ResolveOptions {
   readonly overrideFile?: string;
 }
 
+export type VerifyOptions = Omit<ResolveOptions, "overrideFile">;
+
 interface DependencySpec {
   readonly repository: string;
   readonly commit: string;
@@ -292,6 +294,7 @@ export class SourceResolver {
   private readonly git: Git;
   private readonly validateCoordination: ValidateFunction;
   private readonly validateOverrides: ValidateFunction;
+  private readonly validateOutput: ValidateFunction;
   private readonly afterLockAcquired?: () => Promise<void>;
 
   constructor(runner: CommandRunner, schemaDirectory: string, hooks: ResolverHooks = {}) {
@@ -308,9 +311,22 @@ export class SourceResolver {
         Deno.readTextFileSync(join(schemaDirectory, "local-overrides-v1.schema.json")),
       ) as AnySchema,
     );
+    this.validateOutput = ajv.compile(
+      JSON.parse(
+        Deno.readTextFileSync(join(schemaDirectory, "resolution-output-v1.schema.json")),
+      ) as AnySchema,
+    );
   }
 
   async resolve(options: ResolveOptions): Promise<ResolutionOutput> {
+    return await this.inspect(options, true);
+  }
+
+  async verify(options: VerifyOptions): Promise<ResolutionOutput> {
+    return await this.inspect({ ...options, overrideFile: undefined }, false);
+  }
+
+  private async inspect(options: ResolveOptions, materialize: boolean): Promise<ResolutionOutput> {
     const rootName = options.mode === "mobile-transitive" ? "mobile" : "application";
     const rootRepository = options.mode === "mobile-transitive"
       ? MOBILE_REPOSITORY
@@ -320,6 +336,9 @@ export class SourceResolver {
       : APPLICATION_REPOSITORY_NAME;
     const canonicalRoot = await this.verifiedRoot(rootName, rootRepositoryName, options.root);
     const rootNode = await this.describeWorkTree(rootName, rootRepository, canonicalRoot, "root");
+    if (!materialize) {
+      this.assertProtectedWorkTree(rootNode);
+    }
 
     const nodes: ResolvedNode[] = [rootNode];
     let coordinationDirectory = canonicalRoot;
@@ -335,14 +354,35 @@ export class SourceResolver {
         options.applicationPath,
         "application",
       );
-      nodes.push(
-        await this.describeWorkTree(
-          "application",
-          APPLICATION_REPOSITORY,
-          canonicalApplication,
-          "pre-resolved",
-        ),
+      if (!materialize) {
+        const managedWorkspace = containWithin(canonicalRoot, options.workspace);
+        const expectedApplication = containWithin(
+          canonicalRoot,
+          join(managedWorkspace, "application"),
+        );
+        if (canonicalApplication !== expectedApplication) {
+          throw new ResolverError(
+            "application-path-mismatch",
+            "application is not the managed checkout",
+          );
+        }
+        if (!(await this.git.originEquals(canonicalApplication, APPLICATION_REPOSITORY))) {
+          throw new ResolverError(
+            "application-repository-mismatch",
+            "application has a noncanonical origin",
+          );
+        }
+      }
+      const application = await this.describeWorkTree(
+        "application",
+        APPLICATION_REPOSITORY,
+        canonicalApplication,
+        "pre-resolved",
       );
+      if (!materialize) {
+        this.assertProtectedWorkTree(application);
+      }
+      nodes.push(application);
       coordinationDirectory = canonicalApplication;
     }
 
@@ -353,11 +393,35 @@ export class SourceResolver {
     const override = overrides?.overrides.core;
     nodes.push(
       override === undefined
-        ? await this.resolveManaged(dependency, canonicalRoot, options.workspace)
+        ? await this.resolveManaged(dependency, canonicalRoot, options.workspace, materialize)
         : await this.resolveOverride(dependency, override, options.overrideFile as string),
     );
 
-    return { schemaVersion: 1, resolved: nodes };
+    const output = { schemaVersion: 1, resolved: nodes };
+    if (!materialize && !this.validateOutput(output)) {
+      throw new ResolverError("malformed-output", "resolution output failed its schema");
+    }
+    return output;
+  }
+
+  private assertProtectedWorkTree(node: ResolvedNode): void {
+    try {
+      Deno.lstatSync(join(node.path, "coordination/local-overrides.json"));
+      throw new ResolverError(
+        "override-file-present",
+        "local dependency override files are forbidden",
+      );
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) {
+        throw error;
+      }
+    }
+    if (node.dirty) {
+      throw new ResolverError(
+        `${node.name}-dirty`,
+        "the consumer worktree has uncommitted changes",
+      );
+    }
   }
 
   private async verifiedRoot(
@@ -454,9 +518,28 @@ export class SourceResolver {
     dependency: DependencySpec,
     canonicalRoot: string,
     workspace: string,
+    materialize: boolean,
   ): Promise<ResolvedNode> {
     const managedDirectory = containWithin(canonicalRoot, workspace);
     const destination = containWithin(canonicalRoot, join(managedDirectory, MANAGED_DEPENDENCY));
+    const node: ResolvedNode = {
+      name: MANAGED_DEPENDENCY,
+      repository: dependency.repository,
+      commit: dependency.commit,
+      path: destination,
+      sourceKind: "managed",
+      dirty: false,
+    };
+    if (!materialize) {
+      if (statOrUndefined(join(managedDirectory, ".lock")) !== undefined) {
+        throw new ResolverError("workspace-locked", "another resolver holds the workspace lock");
+      }
+      if (statOrUndefined(destination) === undefined) {
+        throw new ResolverError("unresolved-dependency", "the managed core checkout is missing");
+      }
+      await this.verifyReusable(destination, dependency);
+      return node;
+    }
     const lock = new WorkspaceLock(join(managedDirectory, ".lock"));
     lock.acquire();
     try {
@@ -468,14 +551,7 @@ export class SourceResolver {
       } else {
         await this.verifyReusable(destination, dependency);
       }
-      return {
-        name: MANAGED_DEPENDENCY,
-        repository: dependency.repository,
-        commit: dependency.commit,
-        path: destination,
-        sourceKind: "managed",
-        dirty: false,
-      };
+      return node;
     } finally {
       lock.release();
     }

@@ -43,6 +43,15 @@ just test-integration  # integration suite
 `just dependencies-test` exercises the source resolver in `coordination/tool/` against temporary Git
 repositories and also runs within `just ci`.
 
+`just integrity-acceptance` runs the real transitive integrity CLI from a committed Application
+fixture with sibling Application/Core checkouts under a Mobile fixture. All Git remotes are local;
+Deno uses cached, locked dependencies. Run `just ci` to populate those dependencies before a first
+standalone acceptance run. The suite runs under `just test-integration` and as a separate step in
+pull-request CI. It checks deterministic schema-valid graphs, protected-main and approved-Core-tag
+reachability, dirty and missing checkouts, overrides, identities, HEADs, containment, lock
+contention, credential-safe errors, and unchanged source/workspace contents on success and
+rejection.
+
 Continuous integration invokes the same `just` recipes rather than reproducing their logic in
 workflow files.
 
